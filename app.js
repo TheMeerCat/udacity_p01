@@ -6,13 +6,13 @@
  * - `morgan` Isn't required but help with debugging and logging
  * - `body-parser` This module allows to parse the body of the post request into a JSON
  */
-const express = require('express');
-const morgan = require('morgan');
-const bodyParser = require('body-parser');
+const express = require("express");
+const morgan = require("morgan");
+const bodyParser = require("body-parser");
 /**
  * Require the Blockchain class. This allow us to have only one instance of the class.
  */
-const BlockChain = require('./src/blockchain.js');
+const BlockChain = require("./src/blockchain.js");
 
 class ApplicationServer {
   constructor() {
@@ -31,23 +31,23 @@ class ApplicationServer {
   }
 
   initExpress() {
-    this.app.set('port', 8000);
+    this.app.set("port", 8000);
   }
 
   initExpressMiddleWare() {
-    this.app.use(morgan('dev'));
+    this.app.use(morgan("dev"));
     this.app.use(bodyParser.urlencoded({ extended: true }));
     this.app.use(bodyParser.json());
   }
 
   initControllers() {
-    require('./BlockchainController.js')(this.app, this.blockchain);
+    require("./BlockchainController.js")(this.app, this.blockchain);
   }
 
   start() {
     let self = this;
-    this.app.listen(this.app.get('port'), () => {
-      console.log(`Server Listening for port: ${self.app.get('port')}`);
+    this.app.listen(this.app.get("port"), () => {
+      console.log(`Server Listening for port: ${self.app.get("port")}`);
     });
   }
 }

@@ -8,9 +8,9 @@
  *
  */
 
-const SHA256 = require('crypto-js/sha256');
-const BlockClass = require('./block.js');
-const bitcoinMessage = require('bitcoinjs-message');
+const SHA256 = require("crypto-js/sha256");
+const BlockClass = require("./block.js");
+const bitcoinMessage = require("bitcoinjs-message");
 
 class Blockchain {
   /**
@@ -34,7 +34,7 @@ class Blockchain {
    */
   async initializeChain() {
     if (this.height === -1) {
-      let block = new BlockClass.Block({ data: 'Genesis Block' });
+      let block = new BlockClass.Block({ data: "Genesis Block" });
       await this._addBlock(block);
     }
   }
@@ -66,7 +66,8 @@ class Blockchain {
     let self = this;
     return new Promise(async (resolve, reject) => {
       if (!block?.body) {
-        reject('Block is empty. No body was provided.');
+        reject("Block is empty. No body was provided.");
+        return;
       }
 
       block.height = self.chain.length;
@@ -80,6 +81,11 @@ class Blockchain {
 
       self.chain.push(block);
       self.height = self.height + 1;
+
+      if (!self.validateChain()) {
+        reject("The chain is invalid.");
+        return;
+      }
 
       resolve(block);
     });
@@ -95,15 +101,16 @@ class Blockchain {
    */
   requestMessageOwnershipVerification(address) {
     return new Promise((resolve, reject) => {
-      if (address) {
-        resolve(
-          `${
-            address + ':' + new Date().getTime().toString().slice(0, -3)
-          }:starRegistry`,
-        );
+      if (!address) {
+        reject("No address was provided");
+        return;
       }
 
-      reject('No address was provided');
+      resolve(
+        `${
+          address + ":" + new Date().getTime().toString().slice(0, -3)
+        }:starRegistry`
+      );
     });
   }
 
@@ -128,17 +135,19 @@ class Blockchain {
     let self = this;
 
     return new Promise(async (resolve, reject) => {
-      const msgUtc = parseInt(message.split(':')[1]);
+      const msgUtc = parseInt(message.split(":")[1]);
       const currentUtc = parseInt(new Date().getTime().toString().slice(0, -3));
 
       const timestampDiff = (currentUtc - msgUtc) / 60;
 
-      if (timestampDiff < 5) {
-        reject('Block can be added after 5min of creation.');
+      if (timestampDiff > 5) {
+        reject("Block cannot be added after 5min of creation.");
+        return;
       }
 
       if (!bitcoinMessage.verify(message, address, signature)) {
-        reject('Message signature is invalid.');
+        reject("Message signature is invalid.");
+        return;
       }
 
       const block = new BlockClass.Block({ address, message, signature, star });
@@ -159,11 +168,12 @@ class Blockchain {
     return new Promise((resolve, reject) => {
       const block = self.chain.find((e) => e.hash === hash);
 
-      if (block) {
-        resolve(block);
+      if (!block) {
+        reject("No block found.");
+        return;
       }
 
-      reject('No block found.');
+      resolve(block);
     });
   }
 
@@ -196,12 +206,12 @@ class Blockchain {
     return new Promise(async (resolve, reject) => {
       const dataPromises = self.chain.map((b) => b.getBData());
       const resolvedData = await Promise.all(dataPromises);
-      const ownedStars = resolvedData.filter((e) => e.address === address);
+      const ownedStars = resolvedData.filter((e) => e?.address === address);
 
       if (ownedStars) {
         resolve(ownedStars.map((e) => e.star));
       } else {
-        resolve('No stars owned by the provided address.');
+        resolve("No stars owned by the provided address.");
       }
     });
   }
