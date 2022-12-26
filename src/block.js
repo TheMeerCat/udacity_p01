@@ -40,9 +40,10 @@ class Block {
       const prevHash = self.hash;
 
       self.hash = null;
-      self.hash = SHA256(JSON.stringify(self)).toString();
+      let newHash = SHA256(JSON.stringify(self)).toString();
+      self.hash = prevHash;
 
-      if (prevHash === self.hash) {
+      if (prevHash === newHash) {
         resolve(true);
         return;
       }
